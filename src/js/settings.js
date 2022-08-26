@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", () => {
 	const enabledCheckbox = document.getElementById("enabledCheckbox");
 	enabledCheckbox.addEventListener("change", () => {
 		const savedTextElement = document.getElementById("saved-text");
-		if (savedTextElement.innerText === "") savedTextElement.innerText = "Saved!";
 		if (!queued) {
 			setTimeout(() => {
 				queued = false;
@@ -61,5 +60,79 @@ document.addEventListener("DOMContentLoaded", () => {
 		} else {
 			enabledCheckbox.checked = isEnabled;
 		}
+	});
+
+	const timeWindowCheckbox = document.getElementById("timeWindowCheckbox");
+	chrome.storage.sync.get(["onlyRunInTimeWindow"], async (storage) => {
+		const { onlyRunInTimeWindow } = storage;
+
+		if (onlyRunInTimeWindow === undefined) {
+			chrome.storage.sync.set(
+				{
+					onlyRunInTimeWindow: false,
+				},
+				() => {}
+			);
+			timeWindowCheckbox.checked = false;
+		} else {
+			timeWindowCheckbox.checked = onlyRunInTimeWindow;
+		}
+	});
+	timeWindowCheckbox.addEventListener("change", () => {
+		chrome.storage.sync.set(
+			{
+				onlyRunInTimeWindow: timeWindowCheckbox.checked,
+			},
+			() => {}
+		);
+	});
+
+	const startTimeInput = document.getElementById("startTimeInput");
+	const endTimeInput = document.getElementById("endTimeInput");
+	chrome.storage.sync.get(["startTime"], async (storage) => {
+		const { startTime } = storage;
+
+		if (startTime === undefined) {
+			chrome.storage.sync.set(
+				{
+					startTime: "08:00",
+				},
+				() => {}
+			);
+			startTimeInput.value = "08:00";
+		} else {
+			startTimeInput.value = startTime;
+		}
+	});
+	chrome.storage.sync.get(["endTime"], async (storage) => {
+		const { endTime } = storage;
+
+		if (endTime === undefined) {
+			chrome.storage.sync.set(
+				{
+					endTime: "17:30",
+				},
+				() => {}
+			);
+			endTimeInput.value = "17:30";
+		} else {
+			endTimeInput.value = endTime;
+		}
+	});
+	startTimeInput.addEventListener("change", () => {
+		chrome.storage.sync.set(
+			{
+				startTime: startTimeInput.value,
+			},
+			() => {}
+		);
+	});
+	endTimeInput.addEventListener("change", () => {
+		chrome.storage.sync.set(
+			{
+				endTime: endTimeInput.value,
+			},
+			() => {}
+		);
 	});
 });

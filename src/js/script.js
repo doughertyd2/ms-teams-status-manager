@@ -34,8 +34,31 @@ const runForceAvailability = async function () {
 };
 
 const requestForceAvailability = function () {
-	chrome.storage.sync.get(["isEnabled", "statusType", "requestCount", "startTime", "endTime", "onlyRunInTimeWindow", "paid"], async (storage) => {
-		let { isEnabled, statusType, requestCount } = storage;
+	chrome.storage.sync.get(["isEnabled", "statusType", "requestCount", "startTime", "endTime", "onlyRunInTimeWindow"], async (storage) => {
+		let { isEnabled, statusType, requestCount, startTime, endTime, onlyRunInTimeWindow } = storage;
+
+		console.log(`startTime: ${startTime}`);
+		console.log(`endTime: ${endTime}`);
+		if (onlyRunInTimeWindow && startTime && endTime) {
+			const currentDate = new Date();
+			const startDate = new Date(currentDate.getTime());
+			startDate.setHours(startTime.split(":")[0]);
+			startDate.setMinutes(startTime.split(":")[1]);
+			startDate.setSeconds("00");
+
+			const endDate = new Date(currentDate.getTime());
+			endDate.setHours(endTime.split(":")[0]);
+			endDate.setMinutes(endTime.split(":")[1]);
+			endDate.setSeconds("00");
+			const isBetween = startDate < currentDate && endDate > currentDate;
+			if (!isBetween) {
+				console.log("onlyRunInTimeWindow set to true and current time is not in inputted window");
+				return;
+			} else {
+				console.log("onlyRunInTimeWindow set to true and time is in window! Running force availability...");
+			}
+		}
+
 		if (requestCount === undefined) {
 			chrome.storage.sync.set(
 				{
