@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Microsoft Teams Status Manager</title>
+		<meta charset="UTF-8" />
+		<script src="../js/settings.js"></script>
+		<link rel="stylesheet" href="../css/main.css" />
+	</head>
+	<style>
+		.flex.center {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.flex.between {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+	</style>
+	<body>
+		<div class="main-container">
+			<div class="section">
+				<div class="flex center">
+					<label class="switch">
+						<input id="enabledCheckbox" type="checkbox" checked />
+						<span class="slider round"></span>
+					</label>
+					<span id="saved-text"></span>
+				</div>
+			</div>
+			<div>
+				<div class="flex between">
+					Availability counter:
+					<span id="count"></span>
+				</div>
+				<div class="flex center"><button class="reset-count" id="resetCount">Reset Count</button></div>
+				<div>Note: This count should go up once every ~30 seconds.</div>
+			</div>
+		</div>
+	</body>
+</html>

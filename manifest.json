@@ -1,0 +1,27 @@
+{
+"update_url": "https://clients2.google.com/service/update2/crx",
+
+    "manifest_version": 3,
+    "name": "Microsoft Teams Status Manager",
+    "version": "1.0.0",
+    "description": "A Chrome extension that manages your activity status.",
+    "background": {
+        "service_worker": "background.js"
+    },
+    "icons": {
+        "16": "src/images/teamsIcon.png",
+        "128": "src/images/teamsIcon.png"
+    },
+    "action": {
+        "default_popup": "src/html/settings.html"
+    },
+    "permissions": [
+        "storage",
+        "alarms",
+        "tabs",
+        "scripting"
+    ],
+    "host_permissions": [
+        "https://*.teams.microsoft.com/*"
+    ]
+}
