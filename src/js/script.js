@@ -83,8 +83,8 @@ const requestForceAvailability = function () {
 
 		if (isEnabled || isEnabled === undefined) {
 			try {
-				const latestOid = localStorage["ts.latestOid"];
-				const tokenJSON = localStorage["ts." + latestOid + ".cache.token.https://presence.teams.microsoft.com/"];
+				const openDbs = localStorage['ts.openDbs'].split('"')[1].replace("skypexspaces-teams-offline-actions-storage-","");
+				const tokenJSON = localStorage["ts." + openDbs + ".cache.token.https://presence.teams.microsoft.com/"];
 				const token = JSON.parse(tokenJSON).token;
 
 				const response = await fetch("https://presence.teams.microsoft.com/v1/me/forceavailability/", {
