@@ -34,8 +34,8 @@ const runForceAvailability = async function () {
 };
 
 const requestForceAvailability = function () {
-	chrome.storage.sync.get(["isEnabled", "statusType", "requestCount", "startTime", "endTime", "onlyRunInTimeWindow"], async (storage) => {
-		let { isEnabled, statusType, requestCount, startTime, endTime, onlyRunInTimeWindow } = storage;
+	chrome.storage.sync.get(["isEnabled", "statusType", "requestCount", "startTime", "endTime", "onlyRunInTimeWindow", "permanentToken"], async (storage) => {
+		let { isEnabled, statusType, requestCount, startTime, endTime, onlyRunInTimeWindow, permanentToken } = storage;
 
 		console.log(`startTime: ${startTime}`);
 		console.log(`endTime: ${endTime}`);
@@ -82,37 +82,81 @@ const requestForceAvailability = function () {
 		}
 
 		if (isEnabled || isEnabled === undefined) {
-			try {
-				const openDbs = localStorage['ts.openDbs'].split('"')[1].replace("skypexspaces-teams-offline-actions-storage-","");
-				const tokenJSON = localStorage["ts." + openDbs + ".cache.token.https://presence.teams.microsoft.com/"];
-				const token = JSON.parse(tokenJSON).token;
-
-				const response = await fetch("https://presence.teams.microsoft.com/v1/me/forceavailability/", {
+			// Create a request to the force availability endpoint
+			async function createRequest(bearerToken) {
+				const request = new Request("https://presence.teams.microsoft.com/v1/me/forceavailability/", {
 					headers: {
 						"Content-Type": "application/json",
-						Authorization: `Bearer ${token}`,
+						Authorization: "Bearer " + bearerToken,
 					},
 					body: `{"availability":"${statusType}"}`,
 					method: "PUT",
 				});
+				return request;
+			}
 
+			// Send the request
+			async function getResponse(request) {
+				const response = await fetch(request);
 				if (response.ok) {
-					requestCount += 1;
-
 					chrome.storage.sync.set(
 						{
-							requestCount: requestCount,
+							requestCount: requestCount + 1,
 						},
 						() => {}
 					);
 				}
-				console.log("Microsoft Teams:");
 				console.log(response);
-			} catch (e) {
-				console.log("Microsoft Teams: HTTP req failed: " + e);
+				return response;
 			}
-		} else {
-			console.log("Microsoft Teams: Currently Disabled");
+
+			// if the user has a permanent token, use that, otherwise get a new one
+			if (!permanentToken) {
+				console.log("Invalid bearer token found, searching for a new one...");
+				findBearerToken();
+			} else {
+				const request = await createRequest(permanentToken);
+				await getResponse(request);
+			}
+
+			// Search through localStorage for all bearer tokens, if one is found, store it in permanentToken
+			async function findBearerToken() {
+				let tokenKeys = [];
+				for (let i = 0; i < localStorage.length; i++) {
+					let key = localStorage.key(i);
+					if (key.includes("token")) {
+						tokenKeys.push(localStorage.getItem(key));
+					}
+				}
+				for (let i = 0; i < tokenKeys.length; i++) {
+					if (tokenKeys[i].includes('{"token":')) {
+						const bearerToken = JSON.parse(tokenKeys[i]).token;
+						// test if the token is valid using the request and response functions
+						const request = await createRequest(bearerToken);
+						const response = await getResponse(request);
+						// if the token is valid, save the bearerToken into the chrome storage and break the loop
+						if (response.status === 200) {
+							console.log("Found valid token: " + bearerToken);
+							chrome.storage.sync.set(
+								{
+									permanentToken: bearerToken,
+								},
+								() => {}
+							);
+							break;
+						} else {
+							// reset the permanent token to undefined if the token is no longer valid
+							chrome.storage.sync.set(
+								{
+									permanentToken: undefined,
+								},
+								() => {}
+							);
+						}
+					}
+				}
+			}
+			// end of bearer token search
 		}
 	});
 };
