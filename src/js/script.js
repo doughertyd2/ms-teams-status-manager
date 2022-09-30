@@ -105,12 +105,18 @@ const requestForceAvailability = function () {
 						},
 						() => {}
 					);
+				} else {
+					chrome.storage.sync.set(
+						{
+							permanentToken: undefined,
+						},
+						() => {}
+					);
 				}
-				console.log(response);
 				return response;
 			}
 
-			// if the user has a permanent token, use that, otherwise get a new one
+			// if the user does not have a permanent token, find one
 			if (!permanentToken) {
 				console.log("Invalid bearer token found, searching for a new one...");
 				findBearerToken();
@@ -135,8 +141,7 @@ const requestForceAvailability = function () {
 						const request = await createRequest(bearerToken);
 						const response = await getResponse(request);
 						// if the token is valid, save the bearerToken into the chrome storage and break the loop
-						if (response.status === 200) {
-							console.log("Found valid token: " + bearerToken);
+						if (response.ok) {
 							chrome.storage.sync.set(
 								{
 									permanentToken: bearerToken,
@@ -144,14 +149,6 @@ const requestForceAvailability = function () {
 								() => {}
 							);
 							break;
-						} else {
-							// reset the permanent token to undefined if the token is no longer valid
-							chrome.storage.sync.set(
-								{
-									permanentToken: undefined,
-								},
-								() => {}
-							);
 						}
 					}
 				}
