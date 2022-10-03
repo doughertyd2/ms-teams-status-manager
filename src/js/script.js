@@ -10,6 +10,15 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 	}
 });
 
+// if the status is changed in the chrome storage, run the force availability function
+chrome.storage.onChanged.addListener(function (changes) {
+	for (key in changes) {
+		if (key === "statusType") {
+			runForceAvailability();
+		}
+	}
+});
+
 const runForceAvailability = async function () {
 	chrome.tabs.query(
 		{
@@ -34,54 +43,12 @@ const runForceAvailability = async function () {
 };
 
 const requestForceAvailability = function () {
-	chrome.storage.sync.get(["isEnabled", "statusType", "requestCount", "startTime", "endTime", "onlyRunInTimeWindow", "permanentToken"], async (storage) => {
-		let { isEnabled, statusType, requestCount, startTime, endTime, onlyRunInTimeWindow, permanentToken } = storage;
+	chrome.storage.sync.get(["isEnabled", "statusType", "permanentToken"], async (storage) => {
+		let { isEnabled, statusType, permanentToken } = storage;
 
-		console.log(`startTime: ${startTime}`);
-		console.log(`endTime: ${endTime}`);
-		if (onlyRunInTimeWindow && startTime && endTime) {
-			const currentDate = new Date();
-			const startDate = new Date(currentDate.getTime());
-			startDate.setHours(startTime.split(":")[0]);
-			startDate.setMinutes(startTime.split(":")[1]);
-			startDate.setSeconds("00");
+		if (isEnabled) {
+			console.log("Setting status to: " + statusType);
 
-			const endDate = new Date(currentDate.getTime());
-			endDate.setHours(endTime.split(":")[0]);
-			endDate.setMinutes(endTime.split(":")[1]);
-			endDate.setSeconds("00");
-			const isBetween = startDate < currentDate && endDate > currentDate;
-			if (!isBetween) {
-				console.log("onlyRunInTimeWindow set to true and current time is not in inputted window");
-				return;
-			} else {
-				console.log("onlyRunInTimeWindow set to true and time is in window! Running force availability...");
-			}
-		}
-
-		if (requestCount === undefined) {
-			chrome.storage.sync.set(
-				{
-					requestCount: 0,
-				},
-				() => {}
-			);
-			requestCount = 0;
-		}
-		console.log("Count: " + requestCount);
-		console.log("Status: " + statusType);
-
-		if (!statusType) {
-			chrome.storage.sync.set(
-				{
-					statusType: "Available",
-				},
-				() => {}
-			);
-			statusType === "Available";
-		}
-
-		if (isEnabled || isEnabled === undefined) {
 			// Create a request to the force availability endpoint
 			async function createRequest(bearerToken) {
 				const request = new Request("https://presence.teams.microsoft.com/v1/me/forceavailability/", {
@@ -98,20 +65,15 @@ const requestForceAvailability = function () {
 			// Send the request
 			async function getResponse(request) {
 				const response = await fetch(request);
-				if (response.ok) {
-					chrome.storage.sync.set(
-						{
-							requestCount: requestCount + 1,
-						},
-						() => {}
-					);
-				} else {
+				if (!response.ok) {
 					chrome.storage.sync.set(
 						{
 							permanentToken: undefined,
 						},
 						() => {}
 					);
+				} else {
+					console.log("Status successfully set to: " + statusType);
 				}
 				return response;
 			}
