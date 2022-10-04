@@ -65,7 +65,8 @@ const requestForceAvailability = function () {
 			// Send the request
 			async function getResponse(request) {
 				const response = await fetch(request);
-				if (!response.ok) {
+				if (!response === 200) {
+					permanentToken = undefined;
 					chrome.storage.sync.set(
 						{
 							permanentToken: undefined,
@@ -103,7 +104,8 @@ const requestForceAvailability = function () {
 						const request = await createRequest(bearerToken);
 						const response = await getResponse(request);
 						// if the token is valid, save the bearerToken into the chrome storage and break the loop
-						if (response.ok) {
+						if (response === 200) {
+							permanentToken = bearerToken;
 							chrome.storage.sync.set(
 								{
 									permanentToken: bearerToken,
