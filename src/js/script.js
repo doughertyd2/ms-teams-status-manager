@@ -65,16 +65,16 @@ const requestForceAvailability = function () {
 			// Send the request
 			async function getResponse(request) {
 				const response = await fetch(request);
-				if (!response === 200) {
-					permanentToken = undefined;
+				if (response.ok) {
+					console.log("Status successfully set to: " + statusType);
+				} else {
 					chrome.storage.sync.set(
 						{
-							permanentToken: undefined,
+							permanentToken: null,
 						},
 						() => {}
 					);
-				} else {
-					console.log("Status successfully set to: " + statusType);
+					console.log("Error: Status could not be set to: " + statusType);
 				}
 				return response;
 			}
@@ -104,8 +104,8 @@ const requestForceAvailability = function () {
 						const request = await createRequest(bearerToken);
 						const response = await getResponse(request);
 						// if the token is valid, save the bearerToken into the chrome storage and break the loop
-						if (response === 200) {
-							permanentToken = bearerToken;
+						if (response.ok) {
+							console.log("New bearer token found: " + bearerToken);
 							chrome.storage.sync.set(
 								{
 									permanentToken: bearerToken,
