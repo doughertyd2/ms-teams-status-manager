@@ -10,10 +10,10 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 	}
 });
 
-// if the status is changed in the chrome storage, run the force availability function
+// if the status or isEnabled is changed in the chrome storage, run the force availability function
 chrome.storage.onChanged.addListener(function (changes) {
 	for (key in changes) {
-		if (key === "statusType") {
+		if (key === "statusType" || key === "isEnabled") {
 			runForceAvailability();
 		}
 	}

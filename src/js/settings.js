@@ -64,15 +64,18 @@ document.addEventListener("DOMContentLoaded", () => {
 			if (statusType == "available") {
 				document.getElementsByClassName("user-status")[0].style.backgroundColor = "var(--teams-status-available)";
 				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px var(--teams-status-available)";
+				chrome.action.setIcon({ path: "../images/available.png" });
 			} else if (statusType == "busy") {
 				document.getElementsByClassName("user-status")[0].style.backgroundColor = "var(--teams-status-busy)";
 				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px var(--teams-status-busy)";
+				chrome.action.setIcon({ path: "../images/busy.png" });
 			} else if (statusType == "berightback") {
 				document.getElementsByClassName("user-status")[0].style.backgroundColor = "var(--teams-status-away)";
 				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px var(--teams-status-away)";
+				chrome.action.setIcon({ path: "../images/away.png" });
 			}
 		}
-		// if the id "status-available" is clicked, then change the background-color of user-status to green
+		// if the id "status-available" is clicked, update the status variable and change the status
 		document.getElementById("status-available").addEventListener("mousedown", function () {
 			console.log("clicked available");
 			statusType = "available";
@@ -84,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			);
 			changeStatus();
 		});
-		// if the id "status-busy" is clicked, then change the background-color of user-status to red
+		// if the id "status-busy" is clicked, update the status variable and change the status
 		document.getElementById("status-busy").addEventListener("mousedown", function () {
 			console.log("clicked busy");
 			statusType = "busy";
@@ -96,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 			);
 			changeStatus();
 		});
-		// if the id "status-away" is clicked, then change the background-color of user-status to yellow
+		// if the id "status-away" is clicked, update the status variable and change the status
 		document.getElementById("status-away").addEventListener("mousedown", function () {
 			console.log("clicked away");
 			statusType = "berightback";
@@ -118,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				document.getElementsByClassName("user-status")[0].style.backgroundColor = "transparent";
 				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px transparent";
 				document.getElementsByClassName("user-container")[0].style.pointerEvents = "none";
+				chrome.action.setIcon({ path: "../images/16x16.png" });
 			}
 		});
 		// add an event listener to the class .user-container and delect if the class contains the class .enabled
