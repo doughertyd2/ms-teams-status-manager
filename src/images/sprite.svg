@@ -1,0 +1,15 @@
+<svg width="0" height="0" class="hidden">
+  <symbol version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="white" viewBox="0 0 600 600" id="profile">
+    <defs>
+      <clipPath id="circular-border">
+        <circle cx="300" cy="300" r="280"></circle>
+      </clipPath>
+      <clipPath id="avoid-antialiasing-bugs">
+        <rect width="100%" height="498"></rect>
+      </clipPath>
+    </defs>
+    <circle cx="300" cy="300" r="280" fill="black" clip-path="url(#avoid-antialiasing-bugs)"></circle>
+    <circle cx="300" cy="230" r="115"></circle>
+    <circle cx="300" cy="550" r="205" clip-path="url(#circular-border)"></circle>
+  </symbol>
+</svg>

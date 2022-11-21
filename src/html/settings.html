@@ -4,10 +4,341 @@
 		<title>Microsoft Teams Status Manager</title>
 		<meta charset="UTF-8" />
 		<script src="../js/settings.js"></script>
-		<link rel="stylesheet" href="../css/main.css" />
+		<!-- <link rel="stylesheet" href="../css/main.css" /> -->
 	</head>
+	<style>
+		body {
+			width: 280px;
+			margin: 0px;
+		}
+
+		div {
+			margin: 5px;
+		}
+
+		.main-container {
+			padding: 5px 5px 5px 10px;
+		}
+
+		.section {
+			border-bottom: 1px solid rgb(88, 88, 88);
+			padding-bottom: 10px;
+			margin-bottom: 10px;
+		}
+
+		.reset-count {
+			background-color: #4b53bc;
+			border: none;
+			color: black;
+			padding: 7px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 12px;
+			margin: 4px 0px 4px 4px;
+			cursor: pointer;
+			border-radius: 4px;
+			color: #fff;
+			transition: background-color 0.2s ease-in-out;
+		}
+
+		.reset-count:hover {
+			background-color: #525abf;
+		}
+
+		.flex.center {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.flex.between {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.switch {
+			position: relative;
+			display: inline-block;
+			width: 60px;
+			height: 34px;
+		}
+
+		.switch input {
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+
+		.slider {
+			position: absolute;
+			cursor: pointer;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: #ccc;
+			-webkit-transition: 0.4s;
+			transition: 0.4s;
+		}
+
+		.slider:before {
+			position: absolute;
+			content: "";
+			height: 26px;
+			width: 26px;
+			left: 4px;
+			bottom: 4px;
+			background-color: white;
+			-webkit-transition: 0.4s;
+			transition: 0.4s;
+		}
+
+		.slider.round {
+			border-radius: 34px;
+		}
+
+		.slider.round:before {
+			border-radius: 50%;
+		}
+
+		input:checked + .slider {
+			background-color: #7b83eb;
+		}
+
+		input:focus + .slider {
+			box-shadow: 0 0 1px #2196f3;
+		}
+
+		input:checked + .slider:before {
+			-webkit-transform: translateX(26px);
+			-ms-transform: translateX(26px);
+			transform: translateX(26px);
+		}
+		:root {
+			--teams-color-main: #7b83eb;
+			--teams-color-main-hover: #525abf;
+			--teams-status-available: #92c353;
+			--teams-status-busy: #c4314b;
+			--teams-status-away: #fdb913;
+			--teams-status-offline: #929292;
+			--gray-color: #e5e5e5;
+			--gray-color-hover: #737373;
+		}
+		body {
+			font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+			user-select: none;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			-o-user-select: none;
+			font-size: 14px;
+		}
+		/* Slider */
+		.slider-container {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background-color: var(--gray-color);
+			position: relative;
+			margin: 0;
+			border-radius: 30px;
+			cursor: pointer;
+			height: 35px;
+			font-weight: bold;
+			color: #000;
+			transition: transform 1s ease-in-out, color 1s ease-in-out;
+			margin: 20px;
+		}
+		.slider-container p {
+			width: 100%;
+			margin: 0;
+			z-index: 1;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: color 0.5s ease-in-out;
+		}
+		.slider-container .slider-switch {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background-color: #fff;
+			transition: transform 0.3s ease-in-out;
+			width: 50%;
+			margin: 0;
+			border-radius: inherit;
+			pointer-events: none;
+			transform: translateX(calc(100%));
+			box-shadow: 0 2px 15px rgb(0 0 0 / 15%);
+		}
+		.slider-container p:first-of-type {
+			color: var(--gray-color-hover);
+		}
+		.slider-container.enabled p:first-of-type {
+			color: #000;
+		}
+
+		.slider-container p:last-of-type {
+			color: #000;
+		}
+		.slider-container.enabled p:last-of-type {
+			color: var(--gray-color-hover);
+		}
+
+		.slider-container.enabled .slider-switch {
+			transform: translateX(0);
+		}
+		/* User Icon */
+		.user-container {
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 10px 0;
+			margin: 0;
+			pointer-events: none;
+		}
+		.user-icon {
+			width: 100px;
+			height: 100px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			box-shadow: 0 2px 15px rgb(0 0 0 / 15%);
+			position: relative;
+			cursor: pointer;
+			transition: transform 0.3s;
+		}
+		.user-container:hover .user-icon {
+			transform: translateX(-35px);
+		}
+		.user-icon .icon {
+			width: 75px;
+			height: 75px;
+			border-radius: 50%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: transform 0.3s;
+		}
+		.user-container .user-status {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background-color: transparent;
+			transition: background-color 0.3s ease-in-out, transform 0.1s ease-in-out;
+			z-index: 1;
+		}
+		.user-container .user-status-selector {
+			position: absolute;
+			bottom: 0;
+			right: 0;
+			transform: translate(68px, 2px);
+			width: min-content;
+			height: 20px;
+			padding: 2px;
+			cursor: pointer;
+			background-color: #fff;
+			box-shadow: 0 2px 15px rgb(0 0 0 / 15%);
+			border-radius: 15px;
+			opacity: 0;
+			transition: opacity 0.3s ease-in-out;
+			display: flex;
+			gap: 2px;
+		}
+		.user-container:hover .icon {
+			transform: scale(1.05);
+		}
+		.user-container:hover .user-status-selector {
+			opacity: 1;
+		}
+		.user-container .status-button {
+			position: relative;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background-color: var(--teams-status-available);
+			margin: 0 2px;
+			cursor: pointer;
+			transition: transform 0.2s ease-in-out;
+			margin: 0;
+		}
+
+		.user-container .status-button:first-of-type {
+			background-color: transparent;
+		}
+		.user-container .status-button:hover {
+			transform: scale(1.05);
+		}
+		#status-available {
+			background-color: var(--teams-status-available);
+		}
+		#status-away {
+			background-color: var(--teams-status-away);
+		}
+		#status-busy {
+			background-color: var(--teams-status-busy);
+		}
+		#status-offline {
+			background-color: var(--teams-status-offline);
+		}
+		.user-status-ping {
+			border-radius: 50%;
+			position: absolute;
+			top: -5px;
+			left: -5px;
+			width: 20px;
+			height: 20px;
+			box-shadow: 0 0 0 2px transparent;
+			animation: growFade 1s infinite;
+			transition: box-shadow 0.3s ease-in-out;
+		}
+		@keyframes growFade {
+			0% {
+				transform: scale(0.5);
+				opacity: 1;
+			}
+			100% {
+				transform: scale(1.5);
+				opacity: 0;
+			}
+		}
+	</style>
 	<body>
-		<div class="main-container">
+		<!-- User Circle -->
+		<div class="user-container enabled">
+			<div class="user-icon">
+				<svg class="icon">
+					<use xlink:href="../images/sprite.svg#profile"></use>
+				</svg>
+				<div class="user-status">
+					<div class="user-status-ping"></div>
+				</div>
+				<div class="user-status-selector">
+					<div class="status-button"></div>
+					<div title="Available" id="status-available" class="status-button"></div>
+					<div title="Busy" id="status-busy" class="status-button"></div>
+					<div title="Be right back" id="status-away" class="status-button"></div>
+				</div>
+			</div>
+		</div>
+		<!-- Custom Slider -->
+		<div id="enable-extension" class="slider-container">
+			<p id="slider-enable">Enabled</p>
+			<p id="slider-disable">Disabled</p>
+			<div class="slider-switch"></div>
+		</div>
+		<!-- Old Stuff -->
+		<!-- <div class="main-container">
 			<div class="section">
 				<div class="flex center">
 					<label class="switch">
@@ -30,6 +361,6 @@
 				<div class="flex between">Start time:<input type="time" id="startTimeInput" value="08:00" /></div>
 				<div class="flex between">End time:<input type="time" id="endTimeInput" value="17:30" /></div>
 			</div>
-		</div>
+		</div> -->
 	</body>
 </html>
