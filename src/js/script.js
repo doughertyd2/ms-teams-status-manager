@@ -25,22 +25,53 @@ const runForceAvailability = async function () {
 			url: "https://teams.microsoft.com/*",
 		},
 		function (items) {
-			for (tab of items) {
+			for (let tab of items) {
 				console.log("tab found: " + tab.url);
-				chrome.scripting.executeScript(
-					{
-						target: {
-							tabId: tab.id,
-						},
-						function: requestForceAvailability,
-					},
-					() => {}
-				);
-				break;
+
+				// Inject and execute the simulateMouseMovement function to prevent "away" status
+				chrome.scripting.executeScript({
+					target: { tabId: tab.id },
+					function: simulateMouseMovement,
+				});
+
+				chrome.scripting.executeScript({
+					target: { tabId: tab.id },
+					function: requestForceAvailability,
+				});
+
+				break; // Stop after the first tab
 			}
 		}
 	);
 };
+
+// Mouse movement simulation function
+function simulateMouseMovement() {
+	const radius = 100; // Radius of the circle
+	const speed = 0.05; // Speed of movement
+	const centerX = window.innerWidth / 2; // X coordinate of the circle's center
+	const centerY = window.innerHeight / 2; // Y coordinate of the circle's center
+	let angle = 0; // Starting angle
+
+	const moveMouse = () => {
+		const x = centerX + radius * Math.cos(angle);
+		const y = centerY + radius * Math.sin(angle);
+		angle += speed;
+
+		const mouseEvent = new MouseEvent("mousemove", {
+			view: window,
+			bubbles: true,
+			cancelable: true,
+			clientX: x,
+			clientY: y,
+		});
+
+		document.dispatchEvent(mouseEvent);
+		requestAnimationFrame(moveMouse);
+	};
+
+	moveMouse();
+}
 
 const requestForceAvailability = function () {
 	chrome.storage.sync.get(["isEnabled", "statusType", "permanentToken"], async (storage) => {
@@ -88,36 +119,46 @@ const requestForceAvailability = function () {
 				await getResponse(request);
 			}
 
-			// Search through localStorage for all bearer tokens, if one is found, store it in permanentToken
+			// Function to search through localStorage for bearer tokens and validate them
 			async function findBearerToken() {
-				let tokenKeys = [];
 				for (let i = 0; i < localStorage.length; i++) {
-					let key = localStorage.key(i);
-					if (key.includes("token")) {
-						tokenKeys.push(localStorage.getItem(key));
-					}
-				}
-				for (let i = 0; i < tokenKeys.length; i++) {
-					if (tokenKeys[i].includes('{"token":')) {
-						const bearerToken = JSON.parse(tokenKeys[i]).token;
-						// test if the token is valid using the request and response functions
-						const request = await createRequest(bearerToken);
-						const response = await getResponse(request);
-						// if the token is valid, save the bearerToken into the chrome storage and break the loop
-						if (response.ok) {
-							console.log("New bearer token found: " + bearerToken);
-							chrome.storage.sync.set(
-								{
-									permanentToken: bearerToken,
-								},
-								() => {}
-							);
-							break;
+					const key = localStorage.key(i);
+					const item = localStorage.getItem(key);
+
+					try {
+						// Attempt to parse each item in case it's JSON
+						const parsedItem = JSON.parse(item);
+
+						// Check if the item has the structure of a token object
+						if (parsedItem && parsedItem.credentialType === "AccessToken" && parsedItem.tokenType === "Bearer" && parsedItem.secret) {
+							const bearerToken = parsedItem.secret; // The 'secret' field is assumed to be the bearer token
+
+							// Test if the token is valid using the request and response functions
+							const request = await createRequest(bearerToken);
+							const response = await getResponse(request);
+
+							// Rate limit if the token is not valid
+							if (!response.ok) {
+								await new Promise((r) => setTimeout(r, 200));
+							}
+
+							if (response.ok) {
+								console.log("Valid bearer token found: " + bearerToken);
+								chrome.storage.sync.set({ permanentToken: bearerToken }, () => {});
+								return; // Exit the function once a valid token is found
+							} else {
+								// Token is not valid, log this and continue to the next item
+								console.log("Found token is not valid, trying next.");
+							}
 						}
+					} catch (e) {
+						// The item was not JSON or did not have the expected structure; ignore and move to the next
+						continue;
 					}
 				}
+
+				console.log("No valid bearer token found in localStorage.");
 			}
-			// end of bearer token search
 		}
 	});
 };
