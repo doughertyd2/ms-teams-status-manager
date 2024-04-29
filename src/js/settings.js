@@ -1,146 +1,103 @@
-let queued = false;
-
 document.addEventListener("DOMContentLoaded", () => {
-	// when the user clicks on the slider-container's first p element, add the class "enabled" to the slider-container
-	document.getElementById("slider-enable").addEventListener("mousedown", function () {
-		document.getElementsByClassName("slider-container")[0].classList.add("enabled");
-	});
-	// when the user clicks on the slider-container's second p element, remove the class "enabled" from the slider-container
-	document.getElementById("slider-disable").addEventListener("mousedown", function () {
-		document.getElementsByClassName("slider-container")[0].classList.remove("enabled");
-	});
-	chrome.storage.sync.get(["statusType", "isEnabled"], (storage) => {
-		// get the variables from storage
-		let { isEnabled, statusType } = storage;
-		// if the status is undefined, set it to "available"
-		if (statusType === undefined) {
-			statusType = "available";
-			chrome.storage.sync.set(
-				{
-					statusType: "available",
-				},
-				() => {}
-			);
-		}
-		// if the isEnabled is undefined, set it to false
-		if (isEnabled === undefined) {
-			isEnabled = false;
-			chrome.storage.sync.set(
-				{
-					isEnabled: false,
-				},
-				() => {}
-			);
-		}
-		// get the isEnabled variable and change the slider-container's class accordingly
-		if (isEnabled) {
-			isEnabled = true;
-			chrome.storage.sync.set(
-				{
-					isEnabled: true,
-				},
-				() => {}
-			);
-			document.getElementsByClassName("slider-switch")[0].style.transition = "none";
-			document.getElementsByClassName("slider-container")[0].classList.add("enabled");
-			document.getElementsByClassName("user-container")[0].style.pointerEvents = "all";
-			changeStatus();
-		} else {
-			isEnabled = false;
-			chrome.storage.sync.set(
-				{
-					isEnabled: false,
-				},
-				() => {}
-			);
-			document.getElementsByClassName("slider-container")[0].classList.remove("enabled");
-			document.getElementsByClassName("user-status")[0].style.backgroundColor = "transparent";
-			document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px transparent";
-			document.getElementsByClassName("user-container")[0].style.pointerEvents = "none";
-		}
-		// function that changes the background-color of user-status to the color of the status variable
-		function changeStatus() {
-			console.log(statusType);
-			if (statusType == "available") {
-				document.getElementsByClassName("user-status")[0].style.backgroundColor = "var(--teams-status-available)";
-				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px var(--teams-status-available)";
-				chrome.action.setIcon({ path: "../images/available.png" });
-			} else if (statusType == "busy") {
-				document.getElementsByClassName("user-status")[0].style.backgroundColor = "var(--teams-status-busy)";
-				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px var(--teams-status-busy)";
-				chrome.action.setIcon({ path: "../images/busy.png" });
-			} else if (statusType == "berightback") {
-				document.getElementsByClassName("user-status")[0].style.backgroundColor = "var(--teams-status-away)";
-				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px var(--teams-status-away)";
-				chrome.action.setIcon({ path: "../images/away.png" });
-			}
-		}
-		// if the id "status-available" is clicked, update the status variable and change the status
-		document.getElementById("status-available").addEventListener("mousedown", function () {
-			console.log("clicked available");
-			statusType = "available";
-			chrome.storage.sync.set(
-				{
-					statusType: "available",
-				},
-				() => {}
-			);
-			changeStatus();
-		});
-		// if the id "status-busy" is clicked, update the status variable and change the status
-		document.getElementById("status-busy").addEventListener("mousedown", function () {
-			console.log("clicked busy");
-			statusType = "busy";
-			chrome.storage.sync.set(
-				{
-					statusType: "busy",
-				},
-				() => {}
-			);
-			changeStatus();
-		});
-		// if the id "status-away" is clicked, update the status variable and change the status
-		document.getElementById("status-away").addEventListener("mousedown", function () {
-			console.log("clicked away");
-			statusType = "berightback";
-			chrome.storage.sync.set(
-				{
-					statusType: "berightback",
-				},
-				() => {}
-			);
-			changeStatus();
-		});
-		// if the id "enable-extension" is not enabled, then change the background-color of user-status to gray
-		document.getElementById("enable-extension").addEventListener("mousedown", function () {
-			document.getElementsByClassName("slider-switch")[0].style.transition = "transform 0.3s ease-in-out";
-			if (document.getElementById("enable-extension").classList.contains("enabled")) {
-				changeStatus();
-				document.getElementsByClassName("user-container")[0].style.pointerEvents = "all";
-			} else {
-				document.getElementsByClassName("user-status")[0].style.backgroundColor = "transparent";
-				document.getElementsByClassName("user-status-ping")[0].style.boxShadow = "0 0 0 2px transparent";
-				document.getElementsByClassName("user-container")[0].style.pointerEvents = "none";
-				chrome.action.setIcon({ path: "../images/16x16.png" });
-			}
-		});
-		// add an event listener to the class .user-container and delect if the class contains the class .enabled
-		document.getElementsByClassName("slider-container")[0].addEventListener("click", () => {
-			if (document.getElementsByClassName("slider-container")[0].classList.contains("enabled")) {
-				chrome.storage.sync.set(
-					{
-						isEnabled: true,
-					},
-					() => {}
-				);
-			} else {
-				chrome.storage.sync.set(
-					{
-						isEnabled: false,
-					},
-					() => {}
-				);
-			}
-		});
-	});
+	initTokenIcon();
+	initSliders();
+	initStatusChangeListeners();
+	checkAndInitializeStatus();
+	handleMessageFromBackground();
 });
+
+function initTokenIcon() {
+	chrome.storage.sync.get(["hasPermanentToken"], (storage) => {
+		const tokenIcon = document.querySelector(".token-icon .icon");
+		tokenIcon.classList.toggle("active", !!storage.hasPermanentToken);
+	});
+}
+
+function initSliders() {
+	document.getElementById("slider-enable").addEventListener("mousedown", () => toggleSlider(true));
+	document.getElementById("slider-disable").addEventListener("mousedown", () => toggleSlider(false));
+}
+
+function initStatusChangeListeners() {
+	document.getElementById("status-available").addEventListener("mousedown", () => updateStatus("available"));
+	document.getElementById("status-busy").addEventListener("mousedown", () => updateStatus("busy"));
+	document.getElementById("status-away").addEventListener("mousedown", () => updateStatus("berightback"));
+	document.getElementById("enable-extension").addEventListener("mousedown", toggleExtensionEnabled);
+}
+
+function checkAndInitializeStatus() {
+	chrome.storage.sync.get(["statusType", "isEnabled"], (storage) => {
+		const isEnabled = storage.isEnabled !== undefined ? storage.isEnabled : false;
+		const statusType = storage.statusType !== undefined ? storage.statusType : "available";
+
+		updateToggleState(isEnabled, false);
+		updateStatusDisplay(isEnabled, statusType);
+	});
+}
+
+function updateStatus(statusType) {
+	setStorageValue("statusType", statusType);
+	chrome.storage.sync.get(["isEnabled"], ({ isEnabled }) => {
+		updateStatusDisplay(isEnabled, statusType);
+	});
+}
+
+function toggleExtensionEnabled() {
+	chrome.storage.sync.get(["isEnabled", "statusType"], (storage) => {
+		const isEnabled = !storage.isEnabled;
+		const statusType = storage.statusType || "available";
+		setStorageValue("isEnabled", isEnabled);
+		updateToggleState(isEnabled, true);
+		updateStatusDisplay(isEnabled, statusType);
+	});
+}
+
+function updateStatusDisplay(isEnabled, statusType) {
+	const statusColorMap = {
+		available: "var(--teams-status-available)",
+		busy: "var(--teams-status-busy)",
+		berightback: "var(--teams-status-away)",
+	};
+	const defaultColor = "transparent";
+	const color = isEnabled ? statusColorMap[statusType] || defaultColor : defaultColor;
+
+	const userStatus = document.querySelector(".user-status");
+	const userStatusPing = document.querySelector(".user-status-ping");
+	const userContainer = document.querySelector(".user-container");
+
+	userStatus.style.backgroundColor = color;
+	userStatusPing.style.boxShadow = `0 0 0 2px ${color}`;
+	userContainer.style.pointerEvents = isEnabled ? "all" : "none";
+
+	const iconPath = isEnabled ? `../images/${statusType}.png` : "../images/16x16.png";
+	chrome.action.setIcon({ path: iconPath });
+}
+
+function updateToggleState(isEnabled, doAnimation) {
+	const sliderContainer = document.querySelector(".slider-container");
+	const sliderSwitch = sliderContainer.querySelector(".slider-switch");
+
+	// Set or remove the transition based on doAnimation
+	sliderSwitch.style.transition = doAnimation ? "transform 0.3s ease-in-out" : "none";
+
+	// Update the enabled state of the slider container and the button
+	sliderContainer.classList.toggle("enabled", isEnabled);
+	const enableExtensionButton = document.getElementById("enable-extension");
+	enableExtensionButton.classList.toggle("enabled", isEnabled);
+}
+
+function setStorageValue(key, value) {
+	let obj = {};
+	obj[key] = value;
+	chrome.storage.sync.set(obj, () => {
+		console.log(`${key} set to ${value}`);
+	});
+}
+
+function handleMessageFromBackground() {
+	chrome.runtime.onMessage.addListener((message) => {
+		const tokenIcon = document.querySelector(".token-icon .icon");
+		tokenIcon.classList.toggle("active", message.tokenFound);
+		setStorageValue("hasPermanentToken", message.tokenFound);
+	});
+}

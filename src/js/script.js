@@ -11,6 +11,17 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.storage.onChanged.addListener(function (changes) {
+	// if the permanentToken is changed, change the color of the .user-token .icon in the settings page
+	if (changes.permanentToken) {
+		chrome.storage.sync.get(["permanentToken"], (storage) => {
+			let { permanentToken } = storage;
+			if (permanentToken !== undefined) {
+				chrome.runtime.sendMessage({ tokenFound: true });
+			} else {
+				chrome.runtime.sendMessage({ tokenFound: false });
+			}
+		});
+	}
 	if (changes.isEnabled || changes.statusType) {
 		runForceAvailability();
 	}
@@ -112,7 +123,8 @@ function requestForceAvailability() {
 					console.log("Status successfully set to: " + statusType);
 				} else if (response.status === 401) {
 					console.log("Error: Removing invalid token from storage...");
-					chrome.storage.sync.remove("permanentToken", () => {});
+					// Reset the token's value to undefined
+					chrome.storage.sync.set({ permanentToken: undefined }, () => {});
 				} else {
 					console.log("Error: Status could not be set to: " + statusType);
 				}
@@ -147,7 +159,7 @@ function requestForceAvailability() {
 
 							// Rate limit if the token is not valid
 							if (!response.ok) {
-								await new Promise((r) => setTimeout(r, 300));
+								await new Promise((r) => setTimeout(r, 500));
 							}
 
 							if (response.ok) {

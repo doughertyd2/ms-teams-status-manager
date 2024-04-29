@@ -7,118 +7,7 @@
 		<!-- <link rel="stylesheet" href="../css/main.css" /> -->
 	</head>
 	<style>
-		body {
-			width: 280px;
-			margin: 0px;
-		}
-
-		div {
-			margin: 5px;
-		}
-
-		.main-container {
-			padding: 5px 5px 5px 10px;
-		}
-
-		.section {
-			border-bottom: 1px solid rgb(88, 88, 88);
-			padding-bottom: 10px;
-			margin-bottom: 10px;
-		}
-
-		.reset-count {
-			background-color: #4b53bc;
-			border: none;
-			color: black;
-			padding: 7px;
-			text-align: center;
-			text-decoration: none;
-			display: inline-block;
-			font-size: 12px;
-			margin: 4px 0px 4px 4px;
-			cursor: pointer;
-			border-radius: 4px;
-			color: #fff;
-			transition: background-color 0.2s ease-in-out;
-		}
-
-		.reset-count:hover {
-			background-color: #525abf;
-		}
-
-		.flex.center {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-
-		.flex.between {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		.switch {
-			position: relative;
-			display: inline-block;
-			width: 60px;
-			height: 34px;
-		}
-
-		.switch input {
-			opacity: 0;
-			width: 0;
-			height: 0;
-		}
-
-		.slider {
-			position: absolute;
-			cursor: pointer;
-			top: 0;
-			left: 0;
-			right: 0;
-			bottom: 0;
-			background-color: #ccc;
-			-webkit-transition: 0.4s;
-			transition: 0.4s;
-		}
-
-		.slider:before {
-			position: absolute;
-			content: "";
-			height: 26px;
-			width: 26px;
-			left: 4px;
-			bottom: 4px;
-			background-color: white;
-			-webkit-transition: 0.4s;
-			transition: 0.4s;
-		}
-
-		.slider.round {
-			border-radius: 34px;
-		}
-
-		.slider.round:before {
-			border-radius: 50%;
-		}
-
-		input:checked + .slider {
-			background-color: #7b83eb;
-		}
-
-		input:focus + .slider {
-			box-shadow: 0 0 1px #2196f3;
-		}
-
-		input:checked + .slider:before {
-			-webkit-transform: translateX(26px);
-			-ms-transform: translateX(26px);
-			transform: translateX(26px);
-		}
 		:root {
-			--teams-color-main: #7b83eb;
-			--teams-color-main-hover: #525abf;
 			--teams-status-available: #92c353;
 			--teams-status-busy: #c4314b;
 			--teams-status-away: #fdb913;
@@ -134,6 +23,12 @@
 			-ms-user-select: none;
 			-o-user-select: none;
 			font-size: 14px;
+			width: 280px;
+			margin: 0px;
+			position: relative;
+		}
+		div {
+			margin: 5px;
 		}
 		/* Slider */
 		.slider-container {
@@ -312,8 +207,36 @@
 				opacity: 0;
 			}
 		}
+		/* Token */
+		.token-icon {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: absolute;
+			top: 0;
+			right: 0;
+			width: 25px;
+			height: 25px;
+			padding: 5px;
+			border-radius: 50%;
+		}
+		.token-icon .icon {
+			width: 100%;
+			height: 100%;
+		}
+		.token-icon .icon.active {
+			fill: #ffd700;
+		}
+		.token-icon .icon.inactive {
+			fill: #8b0000;
+		}
 	</style>
 	<body>
+		<div class="token-icon">
+			<svg class="icon">
+				<use xlink:href="../images/sprite.svg#key"></use>
+			</svg>
+		</div>
 		<!-- User Circle -->
 		<div class="user-container enabled">
 			<div class="user-icon">
