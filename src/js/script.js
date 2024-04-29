@@ -110,6 +110,9 @@ function requestForceAvailability() {
 				const response = await fetch(request);
 				if (response.ok) {
 					console.log("Status successfully set to: " + statusType);
+				} else if (response.status === 401) {
+					console.log("Error: Removing invalid token from storage...");
+					chrome.storage.sync.remove("permanentToken", () => {});
 				} else {
 					console.log("Error: Status could not be set to: " + statusType);
 				}
@@ -117,7 +120,7 @@ function requestForceAvailability() {
 			}
 
 			if (!permanentToken) {
-				console.log("Invalid bearer token found, searching for a new one...");
+				console.log("Bearer token missing, searching for a new one...");
 				findBearerToken();
 			} else {
 				const request = await createRequest(permanentToken);
@@ -144,7 +147,7 @@ function requestForceAvailability() {
 
 							// Rate limit if the token is not valid
 							if (!response.ok) {
-								await new Promise((r) => setTimeout(r, 200));
+								await new Promise((r) => setTimeout(r, 300));
 							}
 
 							if (response.ok) {
