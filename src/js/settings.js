@@ -11,6 +11,10 @@ function checkIfTeamsTabIsOpen() {
 	chrome.tabs.query({ url: "https://teams.microsoft.com/*" }, (tabs) => {
 		const modal = document.querySelector(".modal");
 		modal.classList.toggle("hidden", tabs.length > 0);
+		// if no Teams tab is open, disable the extension
+		if (tabs.length === 0) {
+			setStorageValue("isEnabled", false);
+		}
 	});
 }
 
