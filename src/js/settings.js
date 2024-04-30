@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 	initTokenIcon();
-	initSliders();
 	initStatusChangeListeners();
 	checkAndInitializeStatus();
 	handleMessageFromBackground();
@@ -8,30 +7,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function initTokenIcon() {
 	chrome.storage.sync.get(["hasPermanentToken"], (storage) => {
-		const tokenIcon = document.querySelector(".token-icon .icon");
+		const tokenIcon = document.querySelector(".key-icon .icon");
 		tokenIcon.classList.toggle("active", !!storage.hasPermanentToken);
 	});
 }
 
-function initSliders() {
-	document.getElementById("slider-enable").addEventListener("mousedown", () => toggleSlider(true));
-	document.getElementById("slider-disable").addEventListener("mousedown", () => toggleSlider(false));
-}
-
 function initStatusChangeListeners() {
-	document.getElementById("status-available").addEventListener("mousedown", () => updateStatus("available"));
-	document.getElementById("status-busy").addEventListener("mousedown", () => updateStatus("busy"));
-	document.getElementById("status-away").addEventListener("mousedown", () => updateStatus("berightback"));
+	document.getElementById("status-available").addEventListener("mousedown", () => updateStatus("Available"));
+	document.getElementById("status-busy").addEventListener("mousedown", () => updateStatus("Busy"));
+	document.getElementById("status-dnd").addEventListener("mousedown", () => updateStatus("DoNotDisturb"));
+	document.getElementById("status-away").addEventListener("mousedown", () => updateStatus("BeRightBack"));
 	document.getElementById("enable-extension").addEventListener("mousedown", toggleExtensionEnabled);
 }
 
 function checkAndInitializeStatus() {
 	chrome.storage.sync.get(["statusType", "isEnabled"], (storage) => {
+		// Check if the extension is enabled, default to false if undefined
 		const isEnabled = storage.isEnabled !== undefined ? storage.isEnabled : false;
+
+		// Check if a status type is already set, default to "available" if undefined
 		const statusType = storage.statusType !== undefined ? storage.statusType : "available";
 
+		// Update the toggle state and the display of the status without causing a transition animation
 		updateToggleState(isEnabled, false);
 		updateStatusDisplay(isEnabled, statusType);
+
+		// If the statusType was not set (undefined), initialize it to "available"
+		if (storage.statusType === undefined) {
+			setStorageValue("statusType", "Available");
+		}
+
+		// Similarly, ensure the isEnabled flag is set in storage if it was undefined
+		if (storage.isEnabled === undefined) {
+			setStorageValue("isEnabled", isEnabled);
+		}
 	});
 }
 
@@ -54,9 +63,10 @@ function toggleExtensionEnabled() {
 
 function updateStatusDisplay(isEnabled, statusType) {
 	const statusColorMap = {
-		available: "var(--teams-status-available)",
-		busy: "var(--teams-status-busy)",
-		berightback: "var(--teams-status-away)",
+		Available: "var(--teams-status-available)",
+		Busy: "var(--teams-status-busy)",
+		DoNotDisturb: "var(--teams-status-busy)",
+		BeRightBack: "var(--teams-status-away)",
 	};
 	const defaultColor = "transparent";
 	const color = isEnabled ? statusColorMap[statusType] || defaultColor : defaultColor;
@@ -96,7 +106,7 @@ function setStorageValue(key, value) {
 
 function handleMessageFromBackground() {
 	chrome.runtime.onMessage.addListener((message) => {
-		const tokenIcon = document.querySelector(".token-icon .icon");
+		const tokenIcon = document.querySelector(".key-icon .icon");
 		tokenIcon.classList.toggle("active", message.tokenFound);
 		setStorageValue("hasPermanentToken", message.tokenFound);
 	});

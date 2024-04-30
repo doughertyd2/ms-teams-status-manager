@@ -37,7 +37,7 @@ const runForceAvailability = async function (isEnabled = true) {
 				},
 				function (items) {
 					for (let tab of items) {
-						console.log("Tab found: " + tab.url);
+						console.log("[MSTSM] Tab found: " + tab.url);
 
 						chrome.scripting.executeScript({
 							target: { tabId: tab.id },
@@ -69,7 +69,7 @@ function simulateMouseMovement() {
 	const steps = Math.ceil((2 * Math.PI) / speed);
 	let currentStep = 0;
 
-	console.log("Simulating mouse movement...");
+	console.log("[MSTSM] Simulating mouse movement...");
 
 	const moveMouse = () => {
 		if (currentStep >= steps) {
@@ -103,13 +103,19 @@ function requestForceAvailability() {
 		let { isEnabled, statusType, permanentToken } = storage;
 
 		if (isEnabled) {
-			console.log("Setting status to: " + statusType);
+			console.log("[MSTSM] Setting status to: " + statusType);
 
 			async function createRequest(bearerToken) {
 				const request = new Request("https://presence.teams.microsoft.com/v1/me/forceavailability/", {
 					headers: {
-						"Content-Type": "application/json",
+						Accept: "application/json",
 						Authorization: "Bearer " + bearerToken,
+						"Content-Type": "application/json",
+						"Content-Length": "0",
+						"X-Ms-Client-Caller": "",
+						"X-Ms-Client-Type": "cdlworker",
+						"X-Ms-Client-User-Agent": "Teams-V2-Web",
+						Behavioroverride: "redirectAs404",
 					},
 					body: `{"availability":"${statusType}"}`,
 					method: "PUT",
@@ -120,19 +126,19 @@ function requestForceAvailability() {
 			async function getResponse(request) {
 				const response = await fetch(request);
 				if (response.ok) {
-					console.log("Status successfully set to: " + statusType);
+					console.log("[MSTSM] Status successfully set to: " + statusType);
 				} else if (response.status === 401) {
-					console.log("Error: Removing invalid token from storage...");
+					console.log("[MSTSM] Error: Removing invalid token from storage...");
 					// Reset the token's value to undefined
 					chrome.storage.sync.set({ permanentToken: undefined }, () => {});
 				} else {
-					console.log("Error: Status could not be set to: " + statusType);
+					console.log("[MSTSM] Error: Status could not be set to: " + statusType);
 				}
 				return response;
 			}
 
 			if (!permanentToken) {
-				console.log("Bearer token missing, searching for a new one...");
+				console.log("[MSTSM] Bearer token missing, searching for a new one...");
 				findBearerToken();
 			} else {
 				const request = await createRequest(permanentToken);
@@ -149,8 +155,8 @@ function requestForceAvailability() {
 						// Attempt to parse each item in case it's JSON
 						const parsedItem = JSON.parse(item);
 
-						// Check if the item has the structure of a token object
-						if (parsedItem && parsedItem.credentialType === "AccessToken" && parsedItem.tokenType === "Bearer" && parsedItem.secret) {
+						// Check if the item has the structure of a token object and contains the target domain
+						if (parsedItem && parsedItem.credentialType === "AccessToken" && parsedItem.tokenType === "Bearer" && parsedItem.secret && parsedItem.target && parsedItem.target.includes("presence.teams.microsoft.com")) {
 							const bearerToken = parsedItem.secret; // The 'secret' field is assumed to be the bearer token
 
 							// Test if the token is valid using the request and response functions
@@ -159,16 +165,16 @@ function requestForceAvailability() {
 
 							// Rate limit if the token is not valid
 							if (!response.ok) {
-								await new Promise((r) => setTimeout(r, 500));
+								await new Promise((resolve) => setTimeout(resolve, 500));
 							}
 
 							if (response.ok) {
-								console.log("Valid bearer token found: " + bearerToken);
+								console.log("[MSTSM] Valid bearer token found: " + bearerToken);
 								chrome.storage.sync.set({ permanentToken: bearerToken }, () => {});
 								return; // Exit the function once a valid token is found
 							} else {
 								// Token is not valid, log this and continue to the next item
-								console.log("Found token is not valid, trying next.");
+								console.log("[MSTSM] Found token is not valid, trying next.");
 							}
 						}
 					} catch (e) {
@@ -177,7 +183,7 @@ function requestForceAvailability() {
 					}
 				}
 
-				console.log("No valid bearer token found in localStorage.");
+				console.log("[MSTSM] No valid bearer token found in localStorage.");
 			}
 		}
 	});
