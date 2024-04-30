@@ -1,6 +1,6 @@
 chrome.runtime.onInstalled.addListener(async () => {
 	chrome.alarms.create("forceTeamsAvailability", {
-		periodInMinutes: 0.5,
+		periodInMinutes: 1,
 	});
 });
 
@@ -11,17 +11,6 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 chrome.storage.onChanged.addListener(function (changes) {
-	// if the permanentToken is changed, change the color of the .user-token .icon in the settings page
-	if (changes.permanentToken) {
-		chrome.storage.sync.get(["permanentToken"], (storage) => {
-			let { permanentToken } = storage;
-			if (permanentToken !== undefined) {
-				chrome.runtime.sendMessage({ tokenFound: true });
-			} else {
-				chrome.runtime.sendMessage({ tokenFound: false });
-			}
-		});
-	}
 	if (changes.isEnabled || changes.statusType) {
 		runForceAvailability();
 	}
@@ -130,7 +119,7 @@ function requestForceAvailability() {
 				} else if (response.status === 401) {
 					console.log("[MSTSM] Error: Removing invalid token from storage...");
 					// Reset the token's value to undefined
-					chrome.storage.sync.set({ permanentToken: undefined }, () => {});
+					permanentToken = undefined;
 				} else {
 					console.log("[MSTSM] Error: Status could not be set to: " + statusType);
 				}
@@ -139,6 +128,7 @@ function requestForceAvailability() {
 
 			if (!permanentToken) {
 				console.log("[MSTSM] Bearer token missing, searching for a new one...");
+				chrome.runtime.sendMessage({ tokenFound: false });
 				findBearerToken();
 			} else {
 				const request = await createRequest(permanentToken);
@@ -165,11 +155,12 @@ function requestForceAvailability() {
 
 							// Rate limit if the token is not valid
 							if (!response.ok) {
-								await new Promise((resolve) => setTimeout(resolve, 500));
+								await new Promise((resolve) => setTimeout(resolve, 1000));
 							}
 
 							if (response.ok) {
 								console.log("[MSTSM] Valid bearer token found: " + bearerToken);
+								chrome.runtime.sendMessage({ tokenFound: true });
 								chrome.storage.sync.set({ permanentToken: bearerToken }, () => {});
 								return; // Exit the function once a valid token is found
 							} else {

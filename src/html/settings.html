@@ -12,6 +12,7 @@
 			--teams-status-busy: #c4314b;
 			--teams-status-away: #fdb913;
 			--teams-status-offline: #929292;
+			--teams-logo-color: #7880e5;
 			--gray-color: #e5e5e5;
 			--gray-color-hover: #737373;
 		}
@@ -234,9 +235,55 @@
 		.key-icon .icon.active {
 			fill: var(--teams-status-away);
 		}
+		/* Modal */
+		.modal {
+			position: absolute;
+			z-index: 2;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 205px;
+			overflow: none;
+			background-color: rgba(0, 0, 0, 0.9);
+			margin: 0;
+			pointer-events: auto;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+		}
+		.modal-button {
+			background-color: var(--teams-logo-color);
+			color: white;
+			border: none;
+			cursor: pointer;
+			width: 50%;
+			padding: 10px;
+			font-size: 18px;
+			text-align: center;
+			text-decoration: none;
+			margin: 10px;
+			border-radius: 5px;
+		}
+		.modal-text {
+			color: white;
+			font-size: 20px;
+			text-align: center;
+			margin: 5% auto;
+			width: 80%;
+		}
+		.modal.hidden {
+			display: none;
+		}
 	</style>
 	<body>
-		<div title="Open a Microsoft Teams tab for the extension to work. |Red|: Key is not found. |Gold|: Key is found." class="key-icon">
+		<!-- Modal -->
+		<div class="modal hidden">
+			<p class="modal-text">Please open a Microsoft Teams tab and sign in to use this extension.</p>
+			<a href="https://teams.microsoft.com" target="_blank" class="modal-button">Open Microsoft Teams</a>
+		</div>
+		<!-- Key Icon -->
+		<div title="Key Status: Gray icon means no key found. Gold icon means key is found." class="key-icon">
 			<svg class="icon">
 				<use xlink:href="../images/sprite.svg#key"></use>
 			</svg>
