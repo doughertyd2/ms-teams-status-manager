@@ -3,7 +3,16 @@ document.addEventListener("DOMContentLoaded", () => {
 	initStatusChangeListeners();
 	checkAndInitializeStatus();
 	handleMessageFromBackground();
+	checkIfTeamsTabIsOpen();
 });
+
+// If there exists a tab with the Teams URL, hide the modal
+function checkIfTeamsTabIsOpen() {
+	chrome.tabs.query({ url: "https://teams.microsoft.com/*" }, (tabs) => {
+		const modal = document.querySelector(".modal");
+		modal.classList.toggle("hidden", tabs.length > 0);
+	});
+}
 
 function initTokenIcon() {
 	chrome.storage.sync.get(["hasPermanentToken"], (storage) => {
