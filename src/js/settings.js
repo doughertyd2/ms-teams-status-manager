@@ -20,8 +20,12 @@ function checkIfTeamsTabIsOpen() {
 
 function initTokenIcon() {
 	chrome.storage.sync.get(["hasPermanentToken"], (storage) => {
-		const tokenIcon = document.querySelector(".key-icon .icon");
+		const tokenIcon = document.querySelector("#token-icon");
 		tokenIcon.classList.toggle("active", !!storage.hasPermanentToken);
+	});
+	chrome.storage.sync.get(["hasCall"], (storage) => {
+		const callIcon = document.querySelector("#call-icon");
+		callIcon.classList.toggle("active", !!storage.hasCall);
 	});
 }
 
@@ -119,8 +123,17 @@ function setStorageValue(key, value) {
 
 function handleMessageFromBackground() {
 	chrome.runtime.onMessage.addListener((message) => {
-		const tokenIcon = document.querySelector(".key-icon .icon");
-		tokenIcon.classList.toggle("active", message.tokenFound);
-		setStorageValue("hasPermanentToken", message.tokenFound);
+		const tokenIcon = document.querySelector("#token-icon");
+		const callIcon = document.querySelector("#call-icon");
+
+		// Check if message contains specific property before toggling or setting storage
+		if (typeof message.tokenFound !== "undefined") {
+			tokenIcon.classList.toggle("active", message.tokenFound);
+			setStorageValue("hasPermanentToken", message.tokenFound);
+		}
+		if (typeof message.callFound !== "undefined") {
+			callIcon.classList.toggle("active", message.callFound);
+			setStorageValue("hasCall", message.callFound);
+		}
 	});
 }

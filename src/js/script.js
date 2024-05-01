@@ -30,13 +30,17 @@ const runForceAvailability = async function (isEnabled = true) {
 
 						chrome.scripting.executeScript({
 							target: { tabId: tab.id },
-							function: requestForceAvailability,
+							function: simulateMouseMovement,
 						});
 
-						// Inject scripts only if enabled
 						chrome.scripting.executeScript({
 							target: { tabId: tab.id },
-							function: simulateMouseMovement,
+							function: checkCurrentStatus,
+						});
+
+						chrome.scripting.executeScript({
+							target: { tabId: tab.id },
+							function: requestForceAvailability,
 						});
 
 						break; // Stop after the first tab
@@ -46,6 +50,25 @@ const runForceAvailability = async function (isEnabled = true) {
 		}
 	});
 };
+
+function checkCurrentStatus() {
+	// get the current status directly from the DOM
+	const getCurrentStatus = () => {
+		return document.querySelector("#idna-me-control-avatar-trigger").getAttribute("aria-label");
+	};
+
+	const currentStatus = getCurrentStatus();
+
+	// Check if the current status contains the words "available" and make sure it's case insensitive
+	if ((currentStatus && currentStatus.toLowerCase().includes("call")) || currentStatus.toLowerCase().includes("meeting")) {
+		// create chrome storage variable "hasCall"
+		chrome.storage.sync.set({ hasCall: true });
+		chrome.runtime.sendMessage({ callFound: true });
+	} else {
+		chrome.storage.sync.set({ hasCall: false });
+		chrome.runtime.sendMessage({ callFound: false });
+	}
+}
 
 function simulateMouseMovement() {
 	const radius = 100; // Radius of the circle
@@ -88,10 +111,16 @@ function simulateMouseMovement() {
 }
 
 function requestForceAvailability() {
-	chrome.storage.sync.get(["isEnabled", "statusType", "permanentToken"], async (storage) => {
-		let { isEnabled, statusType, permanentToken } = storage;
+	chrome.storage.sync.get(["isEnabled", "statusType", "permanentToken", "hasCall"], async (storage) => {
+		let { isEnabled, statusType, permanentToken, hasCall } = storage;
 
 		if (isEnabled) {
+			// if the user is in a call, don't change the status
+			if (hasCall) {
+				console.log("[MSTSM] User is in a call, status will not be changed.");
+				return; // Stop execution if the user is in a call
+			}
+
 			console.log("[MSTSM] Setting status to: " + statusType);
 
 			async function createRequest(bearerToken) {

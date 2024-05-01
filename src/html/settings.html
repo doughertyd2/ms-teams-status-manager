@@ -213,28 +213,6 @@
 				opacity: 0;
 			}
 		}
-		/* Token */
-		.key-icon {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			position: absolute;
-			top: 0;
-			right: 0;
-			width: 25px;
-			height: 25px;
-			padding: 5px;
-			border-radius: 50%;
-		}
-		.key-icon .icon {
-			width: 100%;
-			height: 100%;
-			fill: var(--teams-status-offline);
-			transition: filter 0.3s ease-in-out;
-		}
-		.key-icon .icon.active {
-			fill: var(--teams-status-away);
-		}
 		/* Modal */
 		.modal {
 			position: absolute;
@@ -275,6 +253,35 @@
 		.modal.hidden {
 			display: none;
 		}
+		/* Token */
+		.icon-collection {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			position: absolute;
+			top: 0;
+			right: 0;
+			width: 60px;
+			height: 30px;
+			padding: 5px;
+			gap: 10px;
+		}
+		.icon-collection .icon-container {
+			width: 30px;
+			height: 30px;
+			margin: 0;
+		}
+		.icon-collection .icon {
+			width: 100%;
+			height: 100%;
+			fill: var(--teams-status-offline);
+		}
+		#token-icon.active {
+			fill: var(--teams-status-away);
+		}
+		#call-icon.active {
+			fill: var(--teams-status-busy);
+		}
 	</style>
 	<body>
 		<!-- Modal -->
@@ -282,11 +289,18 @@
 			<p class="modal-text">Please open a Microsoft Teams tab and sign in to use this extension.</p>
 			<a href="https://teams.microsoft.com" target="_blank" class="modal-button">Open Microsoft Teams</a>
 		</div>
-		<!-- Key Icon -->
-		<div title="Key Status: Gray icon means no key found. Gold icon means key is found." class="key-icon">
-			<svg class="icon">
-				<use xlink:href="../images/sprite.svg#key"></use>
-			</svg>
+		<!-- Token Icon -->
+		<div class="icon-collection">
+			<div title="If you are in a call, your status will not be overridden." class="icon-container">
+				<svg id="call-icon" class="icon">
+					<use xlink:href="../images/sprite.svg#call"></use>
+				</svg>
+			</div>
+			<div title="If this key is gray, then a token has not been discovered yet for Microsoft Teams." class="icon-container">
+				<svg id="token-icon" class="icon">
+					<use xlink:href="../images/sprite.svg#key"></use>
+				</svg>
+			</div>
 		</div>
 		<!-- User Circle -->
 		<div class="user-container enabled">
